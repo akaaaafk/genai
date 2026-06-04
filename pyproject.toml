@@ -7,6 +7,10 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi[standard]>=0.136.3",
     "jupyter>=1.1.1",
+    "matplotlib>=3.10.9",
     "pydantic>=2.13.4",
+    "scikit-learn>=1.9.0",
+    "scipy>=1.17.1",
+    "spacy>=3.8.14",
     "uvicorn>=0.48.0",
 ]
