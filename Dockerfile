@@ -23,7 +23,7 @@ COPY pyproject.toml uv.lock /code/
 RUN uv sync --frozen
 
 # Copy the application code
-COPY ./homework /code/homework
+COPY assignment1 /code/homework
 
 # Command to run the application
-CMD ["uv", "run", "fastapi", "run", "homework/main.py", "--port", "80"]
+CMD ["uv", "run", "fastapi", "run", "assignment1/main.py", "--port", "80"]
