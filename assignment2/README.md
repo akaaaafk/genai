@@ -17,7 +17,7 @@ and served as a REST API with **FastAPI**.
 
 <br/>
 
-![Training accuracy curve](results/accuracy_curve.png)
+<img src="results/accuracy_curve.png" alt="Training and test accuracy curve" width="520" />
 
 </div>
 
@@ -198,6 +198,6 @@ http://127.0.0.1:8000/docs
 
 <div align="center">
 
-![Loss curve](results/loss_curve.png)
+<img src="results/loss_curve.png" alt="Training and test loss curve" width="520" />
 
 </div>
