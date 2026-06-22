@@ -1,75 +1,34 @@
-import os
-import numpy as np
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.optim as optim
-import torchvision
-import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
-import torch.nn.functional as F
-from model import CNN
 
-torch.manual_seed(920)
-np.random.seed(920)
+from .evaluator import evaluate
+from .checkpoints import save_checkpoint
+from .utils import (
+    save_training_log,
+    save_training_summary,
+    plot_training_curves
+)
 
-CLASSES = [
-    "airplane",
-    "automobile",
-    "bird",
-    "cat",
-    "deer",
-    "dog",
-    "frog",
-    "horse",
-    "ship",
-    "truck"
-]
-
-BATCH_SIZE = 64
-
-def train():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    transform = transforms.Compose([
-        transforms.Resize((64,64)),
-        transforms.ToTensor()])
-
-    train_dataset = torchvision.datasets.CIFAR10(
-        root = "./data",
-        train=True,
-        download = True,
-        transform = transform
-    )
-
-    test_dataset = torchvision.datasets.CIFAR10(
-        root = "./data",
-        train = False,
-        download=True,
-        transform = transform
-    )
-
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle = True
-    )
-
-    test_dataset = DataLoader(
-        test_dataset,
-        batch_size=BATCH_SIZE,
-        shuffle = False
-    )
-
-    model = CNN().to(device)
-
+def train_model(model, train_loader, test_loader, device, model_dir, result_dir, epochs=10, learning_rate = 0.001):
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr = 0.001)
+    optimizer = optim.Adam(
+        model.parameters(),
+        lr=learning_rate
+    )
 
-    epochs = 10
+    history = []
+
+    best_accuracy = 0.0
+    best_epoch = 0
 
     for epoch in range(epochs):
         model.train()
+
         running_loss = 0.0
+        train_correct = 0
+        train_total = 0
 
         for images, labels in train_loader:
             images = images.to(device)
@@ -84,6 +43,76 @@ def train():
 
             running_loss += loss.item()
 
-        avg_loss = running_loss / len(train_loader)
+            predicted = torch.argmax(outputs, dim=1)
+            train_total += labels.size(0)
+            train_correct += (predicted == labels).sum().item()
 
-        accuracy = evaluate(model, test_loader, device)
+        train_loss = running_loss / len(train_loader)
+        train_accuracy = 100 * train_correct / train_total
+
+        test_loss, test_accuracy = evaluate(
+            model = model,
+            data_loader= test_loader,
+            criterion=criterion,
+            device=device
+        )
+
+        epoch_result = {
+            "epoch":epoch + 1,
+            "train_loss":round(train_loss, 4),
+            "train_accuracy": round(train_accuracy, 2),
+            "test_loss": round(test_loss, 4),
+            "test_accuracy": round(test_accuracy, 2)
+        }
+
+        history.append(epoch_result)
+
+        print(
+            f"Epoch {epoch + 1}/{epochs} | "
+            f"Train Loss: {train_loss:.4f} | "
+            f"Train Accuracy: {train_accuracy:.2f}% | "
+            f"Test Loss: {test_loss:.4f} | "
+            f"Test Accuracy: {test_accuracy:.2f}%"
+        )
+
+        if test_accuracy > best_accuracy:
+            best_accuracy = test_accuracy
+            best_epoch = epoch + 1
+
+            save_checkpoint(
+                model = model,
+                optimizer = optimizer,
+                epoch = epoch + 1,
+                test_loss = test_loss,
+                test_accuracy = test_accuracy,
+                path = model_dir / "best_model.pth"
+            )
+
+            print(f"Best model saved at epoch {epoch + 1}")
+
+    save_checkpoint(
+        model=model,
+        optimizer = optimizer,
+        epoch = epochs,
+        test_loss = history[-1]["test_loss"], # last element
+        test_accuracy=history[-1]["test_accuracy"],
+        path =model_dir / "final_model.pth"
+    )
+
+    save_training_summary(
+        history=history,
+        best_epoch=best_epoch,
+        best_accuracy=round(best_accuracy, 2),
+        result_dir=result_dir
+    )
+
+    plot_training_curves(
+        history=history,
+        result_dir=result_dir
+    )
+
+    print("Training completed.")
+    print(f"Best model saved to {model_dir / 'best_model.pth'}")
+    print(f"Final model saved to {model_dir / 'final_model.pth'}")
+
+    return history

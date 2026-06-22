@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class CNN(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes=10):
         super(CNN, self).__init__()
 
         # layer one
@@ -21,7 +21,7 @@ class CNN(nn.Module):
         self.fc2 = nn.Linear(100, 10)
 
     def forward(self, x):
-        # layer 1
+        # layer app
         x = self.pool(F.relu(self.conv1(x)))
         # layer 2
         x = self.pool(F.relu(self.conv2(x)))

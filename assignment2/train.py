@@ -1,0 +1,43 @@
+from pathlib import Path
+
+from model_cnn.model import CNN
+from model_cnn.data_loader import get_data_loaders
+from model_cnn.trainer import train_model
+from model_cnn.utils import get_device, create_project_dirs
+
+import torch
+import numpy as np
+
+torch.manual_seed(920)
+np.random.seed(920)
+
+def main():
+    base_dir = Path(__file__).resolve().parent
+
+    data_dir, model_dir, result_dir = create_project_dirs(base_dir)
+
+    device = get_device()
+
+    print("Using device:" ,device)
+
+    batch_size = 64
+    epochs = 10
+    learning_rate = 0.001
+
+    train_loader, test_loader = get_data_loaders(data_dir=data_dir, batch_size=batch_size)
+
+    model = CNN(num_classes=10).to(device)
+
+    train_model(
+        model=model,
+        train_loader=train_loader,
+        test_loader=test_loader,
+        device=device,
+        model_dir=model_dir,
+        result_dir=result_dir,
+        epochs=epochs,
+        learning_rate=learning_rate
+    )
+
+if __name__ == "__main__":
+    main()

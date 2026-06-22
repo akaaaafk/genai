@@ -1,36 +1,27 @@
 import torch
-import os
 
-def save_checkpoint(model, optimizer, epoch, loss, accuracy, checkpoint_dir = 'checkpoints'):
-    os.makedirs(checkpoint_dir, exist_ok=True)
 
+def save_checkpoint(model, optimizer, epoch, test_loss, test_accuracy, path):
     checkpoint = {
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict':optimizer.state_dict(),
-        'loss':loss,
-        'accuracy':accuracy
+        "epoch": epoch,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "test_loss": test_loss,
+        "test_accuracy": test_accuracy
     }
 
-    checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{epoch}.pth")
+    torch.save(checkpoint, path)
 
-    torch.save(checkpoint, checkpoint_path)
 
-    return checkpoint_path
+def load_checkpoint(model, checkpoint_path, device, optimizer=None):
+    checkpoint = torch.load(
+        checkpoint_path,
+        map_location=device
+    )
 
-def load_checkpoint(model, optimizer, checkpoint_path, device):
-    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model.load_state_dict(checkpoint["model_state_dict"])
 
-    model.load_state_dict(checkpoint['model_state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    if optimizer is not None and "optimizer_state_dict" in checkpoint:
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 
-    model.to(device)
-
-    epoch = checkpoint['epoch']
-    loss = checkpoint['loss']
-    accuracy = checkpoint['accuracy']
-
-    print(f"Checkpoint loaded from {checkpoint_path}")
-    print(f"Resumed from epoch {epoch}, loss={loss}, accuracy={accuracy}")
-
-    return epoch, loss, accuracy
+    return checkpoint
