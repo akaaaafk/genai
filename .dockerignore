@@ -1,0 +1,25 @@
+# Version control
+.git
+.gitignore
+
+# Python caches / virtual envs
+**/__pycache__
+**/*.pyc
+.venv
+**/.venv
+.python-version
+
+# Datasets and large archives (not needed in the image; re-downloaded on train)
+**/data/
+*.tar.gz
+**/*.tar.gz
+
+# Notebooks, PDFs, and generated results
+**/*.ipynb
+**/*.pdf
+assignment2/results/
+
+# Editor / OS noise
+.vscode
+.idea
+.DS_Store
