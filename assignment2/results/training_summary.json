@@ -1,9 +1,9 @@
 {
     "total_epochs": 10,
-    "best_epoch": 4,
-    "best_test_accuracy": 67.08,
-    "final_train_loss": 0.1787,
-    "final_train_accuracy": 93.89,
-    "final_test_loss": 1.6261,
-    "final_test_accuracy": 66.27
+    "best_epoch": 5,
+    "best_test_accuracy": 67.62,
+    "final_train_loss": 0.1752,
+    "final_train_accuracy": 94.04,
+    "final_test_loss": 1.6475,
+    "final_test_accuracy": 66.03
 }

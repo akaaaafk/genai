@@ -93,7 +93,7 @@ uv sync
 ### 3. Start the FastAPI Server
 
 ```bash
-uv run fastapi dev assignment1/main.py
+uv run fastapi dev assignment1/train.py
 ```
 
 After the server starts, open:

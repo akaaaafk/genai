@@ -11,7 +11,7 @@ and served as a REST API with **FastAPI**.
 ![PyTorch](https://img.shields.io/badge/PyTorch-CNN-EE4C2C?logo=pytorch&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Serving-009688?logo=fastapi&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)
-![Accuracy](https://img.shields.io/badge/Best%20Test%20Accuracy-67.08%25-success)
+![Accuracy](https://img.shields.io/badge/Best%20Test%20Accuracy-67.62%25-success)
 
 **Classes:** `airplane` · `automobile` · `bird` · `cat` · `deer` · `dog` · `frog` · `horse` · `ship` · `truck`
 
@@ -188,15 +188,27 @@ http://127.0.0.1:8000/docs
 
 ## Results
 
+Trained for 10 epochs (Adam, `lr = 0.001`, batch size 64). The best checkpoint is selected
+by highest test accuracy and saved to `models/best_model.pth`.
+
 | Metric | Value |
 |--------|-------|
 | Total epochs | 10 |
-| Best epoch | 4 |
-| Best test accuracy | **67.08%** |
-| Final test accuracy | 66.27% |
-| Final train accuracy | 93.89% |
+| Best epoch | 5 |
+| Best test accuracy | **67.62%** |
+| Final train accuracy | 94.04% |
+| Final test accuracy | 66.03% |
+| Final train loss | 0.1752 |
+| Final test loss | 1.6475 |
+
+The curves below show clear **overfitting**: train accuracy keeps climbing toward ~94% while
+test accuracy plateaus around 66–68%, and the test loss starts rising after epoch 5 even as
+train loss keeps dropping. This is expected for a small 2-conv network without regularization —
+adding dropout, weight decay, or data augmentation would help close the gap.
 
 <div align="center">
+
+<img src="results/accuracy_curve.png" alt="Training and test accuracy curve" width="520" />
 
 <img src="results/loss_curve.png" alt="Training and test loss curve" width="520" />
 
