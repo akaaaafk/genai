@@ -86,7 +86,7 @@ class EnhancedCNN(nn.Module):
         )  # Conv -> BatchNorm -> ReLU -> Pool
 
         # Flatten the feature map
-        x = x.view(-1, 128 * 2 * 2)
+        x = x.view(-1, 128 * 4 * 4)
 
         # Fully connected layer app with Dropout
         x = F.relu(self.fc1(x))
@@ -96,6 +96,86 @@ class EnhancedCNN(nn.Module):
         x = self.fc2(x)
         return x
 
+class VAE(nn.Module):
+    def __init__(self, latent_dim= 128):
+        super(VAE, self).__init__()
+        # width + 2p - k / s + 1
+        # Encoder
+        # Input(B, 3, 64,64)
+        self.conv1 = nn.Conv2d(3,32, kernel_size=3, stride = 2, padding=1)
+        # Output(B,32,32,32)
+
+        self.conv2 = nn.Conv2d(32,64,kernel_size=3,stride=2,padding=1)
+        # Output(B,64,16,16)
+
+        self.conv3 = nn.Conv2d(64,128,kernel_size=3, stride=2,padding=1)
+        # Output(B,128,8,8)
+
+        self.conv4 = nn.Conv2d(128,256, kernel_size=3, stride=2,padding=1)
+        # output(B,256,4,4)
+
+        self.flatten = nn.Flatten()
+
+        self.fc_mu = nn.Linear(256*4*4, latent_dim)
+        self.fc_logvar = nn.Linear(256*4*4, latent_dim)
+
+        # image
+        #   ↓
+        # shared CNN encoder
+        #   ↓
+        # shared feature vector x
+        #   ↓              ↓
+        # fc_mu        fc_logvar
+        #   ↓              ↓
+        # 均值           方差
+        # Decoder
+        self.fc_decode = nn.Linear(latent_dim, 256*4*4)
+
+        self.deconv1 = nn.ConvTranspose2d(256,128,kernel_size=3,stride=2,padding=1, output_padding=1)
+        self.deconv2 = nn.ConvTranspose2d(128,64,kernel_size=3,stride=2,padding=1,output_padding=1)
+        self.deconv3 = nn.ConvTranspose2d(64,32,kernel_size=3,stride=2,padding=1,output_padding=1)
+        self.deconv4 = nn.ConvTranspose2d(32,3,kernel_size=3,stride=2,padding=1,output_padding=1)
+
+    def encode(self,x):
+        x = F.relu(self.conv1(x))
+        x = F.relu(self.conv2(x))
+        x = F.relu(self.conv3(x))
+        x = F.relu(self.conv4(x))
+
+        x = self.flatten(x)
+
+        mu = self.fc_mu(x)
+        logvar = self.fc_logvar(x)
+
+        return mu, logvar
+    def reparameterize(self,mu, logvar):
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+
+        z = mu + eps * std
+
+        return z
+
+    def decode(self,z):
+        x = self.fc_decode(z)
+        x = x.view(-1,256,4,4)
+
+        x = F.relu(self.deconv1(x))
+        x = F.relu(self.deconv2(x))
+        x = F.relu(self.deconv3(x))
+
+        x = torch.sigmoid(self.deconv4(x))
+
+        return x
+
+    def forward(self,x):
+        mu, logvar = self.encode(x)
+
+        z = self.reparameterize(mu, logvar)
+
+        x_recon = self.decode(z)
+
+        return x_recon, mu, logvar
 def get_model(model_name):
     if model_name == "MLP":
         return MLP()
@@ -103,5 +183,7 @@ def get_model(model_name):
         return SimpleCNN()
     elif model_name == "EnhancedCNN":
         return EnhancedCNN()
+    elif model_name == "VAE":
+        return VAE(latent_dim=128)
     else:
         raise ValueError(f"Model {model_name} not recognized.")

@@ -52,19 +52,18 @@ def create_project_dirs(base_dir):
 
     return data_dir, model_dir, result_dir
 
-def save_training_log(history, result_dir):
-    log_path = result_dir / "training_log.csv"
+def save_training_log(history, result_dir, filename="training_log.csv"):
+    if len(history) == 0:
+        return
 
-    with open(log_path, mode = "w", newline = "") as file:
+    log_path = result_dir / filename
+
+    fieldnames = list(history[0].keys())
+
+    with open(log_path, mode="w", newline="") as file:
         writer = csv.DictWriter(
             file,
-            fieldnames = [
-                "epoch",
-                "train_loss",
-                "test_loss",
-                "train_accuracy",
-                "test_accuracy"
-            ]
+            fieldnames=fieldnames
         )
 
         writer.writeheader()
@@ -123,3 +122,18 @@ def plot_training_curves(history, result_dir):
 
     print(f"Loss curve saved to {result_dir / 'loss_curve.png'}")
     print(f"Accuracy curve saved to {result_dir / 'accuracy_curve.png'}")
+
+def plot_gan_training_curves(history, result_dir):
+    epochs = [item["epoch"] for item in history]
+    d_losses = [item["d_loss"] for item in history]
+    g_losses = [item["g_loss"] for item in history]
+
+    plt.figure()
+    plt.plot(epochs, d_losses, label="Discriminator Loss")
+    plt.plot(epochs, g_losses, label="Generator Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("GAN Training Loss")
+    plt.legend()
+    plt.savefig(result_dir / "gan_training_curves.png")
+    plt.close()

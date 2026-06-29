@@ -32,3 +32,44 @@ class CNN(nn.Module):
 
         x = self.fc2(x)
         return x
+
+class Discriminator(nn.Module):
+    def __init__(self):
+        super(Discriminator, self).__init__()
+        self.conv1 = nn.Conv2d(1,64,kernel_size=4,stride=2,padding=1)
+        self.act1 = nn.LeakyReLU(0.2)
+
+        self.conv2 = nn.Conv2d(64,128,kernel_size=4, stride=2,padding=1)
+        self.bn2 = nn.BatchNorm2d(128)
+        self.act2 = nn.LeakyReLU(0.2)
+
+        self.flatten = nn.Flatten()
+        self.fc1 = nn.Linear(128*7*7, 1)
+
+    def forward(self,x):
+        x = self.act1(self.conv1(x))
+        x = self.act2(self.bn2(self.conv2(x)))
+        x = self.flatten(x)
+        x = self.fc1(x)
+        return x
+
+class Generator(nn.Module):
+    def __init__(self, noise_dim = 100):
+        super(Generator, self).__init__()
+        self.latent_dim = noise_dim
+
+        self.fc1 = nn.Linear(self.latent_dim, 128*7*7)
+
+        self.deconv1 = nn.ConvTranspose2d(128,64,kernel_size=4,stride=2,padding=1)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.act1 = nn.ReLU()
+
+        self.deconv2 = nn.ConvTranspose2d(64,1,kernel_size=4,stride=2, padding=1)
+        self.act2 = nn.Tanh()
+
+    def forward(self,x):
+        x = self.fc1(x)
+        x = x.view(x.size(0),128,7,7)
+        x = self.act1(self.bn1(self.deconv1(x)))
+        x = self.act2(self.deconv2(x))
+        return x
