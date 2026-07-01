@@ -1,19 +1,19 @@
 import torch
-import os
+
 
 def save_checkpoint(model, optimizer, epoch, test_loss, test_accuracy, path):
-
     checkpoint = {
-        "epoch":epoch,
-        "model_state_dict":model.state_dict(),
-        "optimizer_state_dict":optimizer.state_dict(),
-        "loss":test_loss,
-        "accuracy":test_accuracy
+        "epoch": epoch,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "test_loss": test_loss,
+        "test_accuracy": test_accuracy
     }
 
     torch.save(checkpoint, path)
 
-def load_checkpoint(model, optimizer, checkpoint_path, device):
+
+def load_checkpoint(model, checkpoint_path, device, optimizer=None):
     checkpoint = torch.load(
         checkpoint_path,
         map_location=device
