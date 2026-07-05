@@ -17,7 +17,7 @@ app = FastAPI(
 # config
 NOISE_DIM = 100
 BASE_DIR = Path(__file__).resolve().parents[1]
-MODEL_PATH = BASE_DIR / "models" / "generator.pth"
+MODEL_PATH = BASE_DIR / "models" / "best_generator.pth"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -29,7 +29,7 @@ RUN uv pip install --no-cache \
 # Copy the assignment code (includes models/best_model.pth needed at startup)
 COPY assignment2 /code/assignment2
 
-# Run from the assignment directory so the local `model_cnn` package is importable
+# Run from the assignment directory so the local `model_combined` package is importable
 WORKDIR /code/assignment2
 ENV PYTHONPATH=/code/assignment2
 

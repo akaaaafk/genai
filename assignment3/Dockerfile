@@ -26,7 +26,7 @@ RUN uv pip install --no-cache \
     --index-url https://download.pytorch.org/whl/cpu \
     torch==2.12.1 torchvision==0.27.1
 
-# Copy the assignment code (includes models/generator.pth needed at startup)
+# Copy the assignment code (includes models/best_generator.pth needed at startup)
 COPY assignment3 /code/assignment3
 
 # Run from the assignment directory so the local `model_combined` package is importable

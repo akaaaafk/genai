@@ -127,7 +127,7 @@ Then open the interactive Swagger UI:
 http://127.0.0.1:8000/docs
 ```
 
-> The server loads `models/generator.pth` at startup, so make sure that file exists.
+> The server loads `models/best_generator.pth` at startup, so make sure that file exists.
 
 ## API Endpoints
 
@@ -143,7 +143,7 @@ Example response:
 {
   "message": "MNIST GAN API is running",
   "device": "cpu",
-  "model_path": ".../assignment3/models/generator.pth"
+  "model_path": ".../assignment3/models/best_generator.pth"
 }
 ```
 

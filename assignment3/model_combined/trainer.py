@@ -213,12 +213,11 @@ def train_gan(generator, discriminator, train_loader, device, model_dir, result_
                 model_dir / "best_generator.pth"
             )
 
-        if avg_g_loss < best_d_loss:
-            best_d_loss = avg_g_loss
-            best_epoch = epoch + 1
+        if avg_d_loss < best_d_loss:
+            best_d_loss = avg_d_loss
 
             torch.save(
-                generator.state_dict(),
+                discriminator.state_dict(),
                 model_dir / "best_discriminator.pth"
             )
 
@@ -226,6 +225,15 @@ def train_gan(generator, discriminator, train_loader, device, model_dir, result_
             history=history,
             result_dir=result_dir
         )
+
+    torch.save(
+        generator.state_dict(),
+        model_dir / "generator.pth"
+    )
+    torch.save(
+        discriminator.state_dict(),
+        model_dir / "discriminator.pth"
+    )
 
     plot_gan_training_curves(
         history=history,
