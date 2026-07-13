@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 import torch.optim as optim
 
-from .evaluator import evaluate
+from .evaluator import evaluate, evaluate_rnn
 from .checkpoints import save_checkpoint
 from .utils import (
     save_training_log,
@@ -117,6 +117,124 @@ def train_model(model, train_loader, test_loader, device, model_dir, result_dir,
     print(f"Final model saved to {model_dir / 'final_model.pth'}")
 
     return history
+
+def train_rnn(model, train_loader, test_loader, device, model_dir, result_dir, epochs=10,learning_rate=0.001,max_grad_norm=5):
+    criterion = nn.CrossEntropyLoss()
+
+    optimizer = optim.Adam(model.parameters(), lr= learning_rate)
+
+    model = model.to(device)
+
+    model_dir.mkdir(parents = True, exist_ok = True)
+    result_dir.mkdir(parents=True, exist_ok=True)
+
+    history = []
+
+    best_test_loss = float("inf")
+    best_epoch = 0
+
+    for epoch in range(epochs):
+        model.train()
+
+        running_loss = 0.0
+        total_tokens = 0
+
+        for inputs, targets in train_loader:
+            inputs = inputs.long().to(device)
+            targets = targets.long().to(device)
+
+            # inputs: (batch_size, seq_len)
+            # targets: (batch_size, seq_len)
+
+            outputs, hidden = model(inputs)
+
+            vocab_size = outputs.size(-1)
+
+            loss = criterion(
+                outputs.reshape(-1, vocab_size),
+                targets.reshape(-1)
+            )
+
+            optimizer.zero_grad()
+            loss.backward()
+
+            torch.nn.utils.clip_grad_norm(
+                model.parameters(),max_norm=max_grad_norm
+            )
+            optimizer.step()
+
+            num_tokens = targets.numel()
+
+            running_loss +=loss.item() * num_tokens
+            total_tokens +=num_tokens
+
+        train_loss = running_loss / total_tokens
+        train_perplexity = float(np.exp(min(train_loss,20)))
+
+        test_loss, test_perplexity = evaluate_rnn(
+            model=model,
+            data_loader=test_loader,
+            criterion=criterion,
+            device=device
+        )
+
+        epoch_result = {
+            "epoch": epoch + 1,
+            "train_loss": round(train_loss, 4),
+            "train_perplexity": round(train_perplexity, 4),
+            "test_loss": round(test_loss, 4),
+            "test_perplexity": round(test_perplexity, 4)
+        }
+
+        history.append(epoch_result)
+
+        print(
+            f"Epoch {epoch + 1}/{epochs} | "
+            f"Train Loss: {train_loss:.4f} | "
+            f"Train PPL: {train_perplexity:.4f} | "
+            f"Test Loss: {test_loss:.4f} | "
+            f"Test PPL: {test_perplexity:.4f}"
+        )
+
+        if test_loss < best_test_loss:
+            best_test_loss = test_loss
+            best_epoch = epoch + 1
+
+            torch.save(
+                {
+                    "epoch": epoch + 1,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "test_loss": test_loss,
+                    "test_perplexity": test_perplexity
+                },
+                model_dir / "best_rnn.pth"
+            )
+
+            print(f"Best RNN model saved at epoch {epoch + 1}")
+        save_training_log(
+            history=history,
+            result_dir=result_dir
+        )
+
+        torch.save(
+            {
+                "epoch": epochs,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "test_loss": history[-1]["test_loss"],
+                "test_perplexity": history[-1]["test_perplexity"]
+            },
+            model_dir / "final_rnn.pth"
+        )
+
+        print("RNN training completed.")
+        print(f"Best RNN model saved to {model_dir / 'best_rnn.pth'}")
+        print(f"Final RNN model saved to {model_dir / 'final_rnn.pth'}")
+        print(f"Best epoch: {best_epoch}")
+        print(f"Best test loss: {best_test_loss:.4f}")
+
+        return history
 
 def train_gan(generator, discriminator, train_loader, device, model_dir, result_dir,epochs=10,noise_dim=100, learning_rate = 0.0002):
     criterion = nn.BCEWithLogitsLoss()

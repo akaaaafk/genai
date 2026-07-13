@@ -249,20 +249,63 @@ class Generator(nn.Module):
         x = self.act2(self.deconv2(x))
         return x
 
-def get_model(model_name):
+class VanillaRNN(nn.Module):
+    # input (B,T)
+    def __init__(self, vocab_size, embedding_dim=128, hidden_dim=256, num_layers=1):
+        super(VanillaRNN, self).__init__()
+
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+
+        self.rnn = nn.RNN(
+            input_size=embedding_dim,
+            hidden_size = hidden_dim,
+            num_layers=num_layers,
+            batch_first=True,
+            nonlinearity="tanh"
+        )
+
+        self.fc = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self,x, hidden = None):
+        x = self.embedding(x)
+
+        out, hidden = self.rnn(x, hidden)
+
+        logits = self.fc(out)
+
+        return logits, hidden
+
+def get_model(model_name, vocab_size=None):
     if model_name == "MLP":
         return MLP()
+
     elif model_name == "SimpleCNN":
         return SimpleCNN()
+
     elif model_name == "EnhancedCNN":
         return EnhancedCNN()
+
     elif model_name == "VAE":
         return VAE(latent_dim=128)
+
     elif model_name == "CNN":
         return CNN()
+
     elif model_name == "Generator":
         return Generator(noise_dim=100)
+
     elif model_name == "Discriminator":
         return Discriminator()
+
+    elif model_name == "VanillaRNN":
+        if vocab_size is None:
+            raise ValueError("VanillaRNN requires vocab_size.")
+        return VanillaRNN(
+            vocab_size=vocab_size,
+            embedding_dim=128,
+            hidden_dim=256,
+            num_layers=1
+        )
+
     else:
         raise ValueError(f"Model {model_name} not recognized.")
