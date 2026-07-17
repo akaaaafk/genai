@@ -275,6 +275,20 @@ class VanillaRNN(nn.Module):
 
         return logits, hidden
 
+class LSTM(nn.Module):
+    def __init__(self, vocab_size, embedding_dim=128,hidden_dim=256):
+        super(LSTM, self).__init__()
+
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, batch_first=True)
+        self.fc = nn.Linear(hidden_dim, vocab_size)
+
+    def forward(self, x, hidden=None):
+        x = self.embedding(x)
+        x, hidden = self.lstm(x, hidden)
+        x = self.fc(x)
+        return x, hidden
+
 def get_model(model_name, vocab_size=None):
     if model_name == "MLP":
         return MLP()
@@ -306,6 +320,10 @@ def get_model(model_name, vocab_size=None):
             hidden_dim=256,
             num_layers=1
         )
+    elif model_name == "LSTM":
+        if vocab_size is None:
+            raise ValueError("LSTM requires vocab_size.")
+        return LSTM(vocab_size=vocab_size, embedding_dim=128, hidden_dim=256)
 
     else:
         raise ValueError(f"Model {model_name} not recognized.")
