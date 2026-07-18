@@ -1,0 +1,6 @@
+data/
+Assignment4.pdf
+__pycache__/
+*.pyc
+# GitHub rejects files >100MB; regenerate via train_ebm.py
+ebm_sample_buffer.pth
