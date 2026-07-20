@@ -15,8 +15,8 @@ with **FastAPI** that streams freshly generated images.
 
 <br/>
 
-<img src="results/ebm_training_curves.png" alt="EBM real vs fake energy over training" width="420" />
-<img src="results/diffusion_training_curves.png" alt="Diffusion noise-prediction loss over training" width="420" />
+<img src="results/generated_diffusion.png" alt="Samples from best_diffusion.pth" width="420" />
+<img src="results/generated_ebm.png" alt="Samples from final_ebm.pth with replay buffer" width="420" />
 
 </div>
 
@@ -43,6 +43,7 @@ assignment4/
 │   └── utils.py             # Device, dirs, logging, plotting
 ├── train_ebm.py             # EBM training entry point
 ├── train_diffusion.py       # Diffusion training entry point
+├── generate.py              # Local sampling from best/final checkpoints
 ├── data/                    # CIFAR-10 dataset (auto-downloaded)
 ├── models/                  # Saved checkpoints (final_ebm.pth, best_diffusion.pth, ...)
 ├── results/                 # Training logs, curves, and per-epoch EBM samples
@@ -161,7 +162,24 @@ This downloads CIFAR-10 to `data/` (if missing) and writes:
 - `results/ebm_samples_epoch_XX.png` (per-epoch sample grids for visual inspection)
 - `results/diffusion_training_log.csv`, `results/diffusion_training_curves.png`
 
-### 3. Start the API
+### 3. Generate images locally (no API)
+
+From `assignment4/` with the venv activated:
+
+```powershell
+# best diffusion checkpoint (lowest noise MSE)
+python generate.py --model diffusion --num 16
+
+# final EBM + replay buffer (do not use best_ebm.pth)
+python generate.py --model ebm --num 16 --steps 60
+
+# both
+python generate.py --model both --num 16
+```
+
+Outputs go to `results/generated_diffusion.png` and/or `results/generated_ebm.png`.
+
+### 4. Start the API
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
@@ -288,7 +306,14 @@ to establish good generation quality. The updated trainer saves per-epoch sample
 instead of treating the lowest CD loss as the best model; retraining is required to produce
 those grids and `models/ebm_sample_buffer.pth`.
 
+Local samples from `final_ebm.pth` with replay-buffer initialization (`python generate.py
+--model ebm --num 16`):
+
 <div align="center">
+
+<img src="results/generated_ebm.png" alt="Generated EBM samples from final_ebm.pth" width="520" />
+
+<br/>
 
 <img src="results/ebm_training_curves.png" alt="EBM real vs fake energy over training" width="520" />
 
@@ -310,7 +335,13 @@ The noise-prediction loss drops sharply in the first few epochs and then slowly 
 ending around ~0.011. This is a typical DDPM learning curve on CIFAR-10 at this scale:
 early epochs learn coarse structure, later epochs refine high-frequency detail.
 
+Local samples from `best_diffusion.pth` (`python generate.py --model diffusion --num 16`):
+
 <div align="center">
+
+<img src="results/generated_diffusion.png" alt="Generated diffusion samples from best_diffusion.pth" width="520" />
+
+<br/>
 
 <img src="results/diffusion_training_curves.png" alt="Diffusion noise-prediction loss over training" width="520" />
 
